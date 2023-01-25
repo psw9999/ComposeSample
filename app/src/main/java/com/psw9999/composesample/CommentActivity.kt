@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,16 +19,40 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.psw9999.composesample.ui.theme.ComposeSampleTheme
 
 class CommentActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ComposeSampleTheme {
-            }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommentScreen(
+    modifier: Modifier = Modifier
+) {
+    Scaffold(
+        topBar = { CommentTopAppBar() },
+        modifier = Modifier.fillMaxSize()
+    ) { paddingValues ->
+        CommentColumn(
+            comments = mockData,
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CommentTopAppBar() {
+    TopAppBar(
+        title = { Text(text = "Comment") },
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
@@ -61,13 +87,14 @@ private fun CommentCard(
 
 @Composable
 private fun CommentContent(
-    comment: Comment
+    comment: Comment,
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var isFollowing by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier
-            .padding(10.dp)
+            .padding(15.dp)
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioMediumBouncy,
@@ -78,19 +105,58 @@ private fun CommentContent(
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(vertical = 8.dp)
         ) {
             KindLabel(
                 comment.stockKinds
             )
             Text(
                 text = comment.stockName,
-                style = MaterialTheme.typography.titleMedium
+                modifier = Modifier.padding(
+                    vertical = 4.dp
+                ),
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold
             )
             Text(
                 text = comment.commentTitle,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                fontSize = 14.sp
             )
+        }
+        Column(
+            modifier = Modifier.fillMaxHeight(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(
+                onClick = { isFollowing = !isFollowing },
+                modifier = Modifier.size(24.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(1.0F),
+                    imageVector = if (isFollowing) Icons.Filled.Star else Icons.Filled.StarBorder,
+                    contentDescription = if (isFollowing) {
+                        "ShowLess"
+                    } else {
+                        "ShowMore"
+                    },
+                )
+            }
+            Spacer(modifier = Modifier.size(24.dp ))
+            IconButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier
+                    .size(24.dp)
+            ) {
+                Icon(
+                    modifier = Modifier.fillMaxSize(1.0F),
+                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                    contentDescription = if (expanded) {
+                        "ShowLess"
+                    } else {
+                        "ShowMore"
+                    }
+                )
+            }
         }
     }
 }
@@ -104,9 +170,10 @@ fun KindLabel(
         color = Color.Red,
         content = {
             Text(
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                modifier = Modifier.padding(horizontal = 3.dp, vertical = 1.dp),
                 text = stockKind,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.ExtraBold,
+                fontSize = 13.sp
             )
         },
         contentColor = Color.White
@@ -130,7 +197,16 @@ fun PreviewCommentColumns() {
         Surface(modifier = Modifier.fillMaxSize()) {
             CommentColumn(
                 modifier = Modifier.fillMaxSize(),
-                comments = mockData)
+                comments = mockData
+            )
         }
+    }
+}
+
+@Preview(showBackground = true, backgroundColor = 0xF6F6F6)
+@Composable
+fun PreviewCommentScreen() {
+    MaterialTheme {
+        CommentScreen()
     }
 }
