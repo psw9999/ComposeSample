@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.psw9999.composesample.ui.theme.ComposeSampleTheme
+import kotlinx.coroutines.NonDisposableHandle.dispose
 
 class CommentActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,7 +38,7 @@ fun CommentScreen(
 ) {
     Scaffold(
         topBar = { CommentTopAppBar() },
-        modifier = Modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         CommentColumn(
             comments = mockData,
@@ -122,6 +123,17 @@ private fun CommentContent(
                 style = MaterialTheme.typography.bodyMedium,
                 fontSize = 14.sp
             )
+            if (expanded) {
+                for (com in comment.commentList) {
+                    Row {
+                        Icon(
+                            imageVector = Icons.Filled.SubdirectoryArrowRight,
+                            contentDescription = null
+                        )
+                        Text(text = com.comment)
+                    }
+                }
+            }
         }
         Column(
             modifier = Modifier.fillMaxHeight(),
@@ -141,7 +153,7 @@ private fun CommentContent(
                     },
                 )
             }
-            Spacer(modifier = Modifier.size(24.dp ))
+            Spacer(modifier = Modifier.size(24.dp))
             IconButton(
                 onClick = { expanded = !expanded },
                 modifier = Modifier
