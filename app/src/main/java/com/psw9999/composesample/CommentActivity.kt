@@ -12,16 +12,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.sharp.SubdirectoryArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.psw9999.composesample.ui.theme.ComposeSampleTheme
-import kotlinx.coroutines.NonDisposableHandle.dispose
 
 class CommentActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +42,7 @@ fun CommentScreen(
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         CommentColumn(
-            comments = mockData,
+            commentItems = addCommentsHeader(mockData),
             modifier = Modifier.padding(paddingValues)
         )
     }
@@ -59,11 +60,20 @@ fun CommentTopAppBar() {
 @Composable
 private fun CommentColumn(
     modifier: Modifier = Modifier,
-    comments: List<Comment>
+    commentItems: List<CommentItem>
 ) {
     LazyColumn(modifier = modifier.padding(vertical = 4.dp)) {
-        items(items = comments) { comment ->
-            CommentCard(comment)
+        items(items = commentItems) { commentItem ->
+            when(commentItem) {
+                is CommentItem.CommentHeader -> {
+                    CommentHeader(
+                        commentItem
+                    )
+                }
+                is CommentItem.CommentCard -> {
+                    CommentCard(comment = commentItem.comment)
+                }
+            }
         }
     }
 }
@@ -89,22 +99,23 @@ private fun CommentCard(
 @Composable
 private fun CommentContent(
     comment: Comment,
+    modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var isFollowing by remember { mutableStateOf(false) }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .padding(15.dp)
             .animateContentSize(
                 animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    dampingRatio = Spring.DampingRatioLowBouncy,
                     stiffness = Spring.StiffnessLow
                 )
             )
     ) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .weight(1f)
         ) {
             KindLabel(
@@ -112,7 +123,7 @@ private fun CommentContent(
             )
             Text(
                 text = comment.stockName,
-                modifier = Modifier.padding(
+                modifier = modifier.padding(
                     vertical = 4.dp
                 ),
                 fontSize = 18.sp,
@@ -125,27 +136,40 @@ private fun CommentContent(
             )
             if (expanded) {
                 for (com in comment.commentList) {
-                    Row {
+                    Row(
+                        modifier = modifier.padding(top = 3.dp)
+                    ) {
                         Icon(
-                            imageVector = Icons.Filled.SubdirectoryArrowRight,
+                            imageVector = Icons.Sharp.SubdirectoryArrowRight,
                             contentDescription = null
                         )
-                        Text(text = com.comment)
+                        Text(
+                            modifier = modifier.padding(vertical = 5.dp, horizontal = 3.dp),
+                            text = stringResource(
+                                id = R.string.comment_list,
+                                com.comment,
+                                com.detailContent
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontSize = 13.sp
+                        )
                     }
                 }
             }
         }
         Column(
-            modifier = Modifier.fillMaxHeight(),
+            modifier = modifier.fillMaxHeight(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             IconButton(
                 onClick = { isFollowing = !isFollowing },
-                modifier = Modifier.size(24.dp)
+                modifier = modifier
+                    .size(24.dp)
             ) {
                 Icon(
-                    modifier = Modifier.fillMaxSize(1.0F),
+                    modifier = modifier.fillMaxSize(1.0F),
                     imageVector = if (isFollowing) Icons.Filled.Star else Icons.Filled.StarBorder,
+                    tint = if (isFollowing) Color.Yellow else Color.Black,
                     contentDescription = if (isFollowing) {
                         "ShowLess"
                     } else {
@@ -153,24 +177,69 @@ private fun CommentContent(
                     },
                 )
             }
-            Spacer(modifier = Modifier.size(24.dp))
-            IconButton(
-                onClick = { expanded = !expanded },
-                modifier = Modifier
-                    .size(24.dp)
-            ) {
-                Icon(
-                    modifier = Modifier.fillMaxSize(1.0F),
-                    imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                    contentDescription = if (expanded) {
-                        "ShowLess"
-                    } else {
-                        "ShowMore"
-                    }
+            Spacer(modifier = modifier.size(24.dp))
+            Row {
+                CountLabel(
+                    count = comment.commentList.size,
+                    modifier = modifier
                 )
+                IconButton(
+                    onClick = { expanded = !expanded },
+                    modifier = modifier
+                        .size(24.dp)
+                ) {
+                    Icon(
+                        modifier = modifier.fillMaxSize(1.0F),
+                        imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                        contentDescription = if (expanded) {
+                            "ShowLess"
+                        } else {
+                            "ShowMore"
+                        }
+                    )
+                }
             }
         }
     }
+}
+
+private fun addCommentsHeader(comments: List<Comment>): List<CommentItem> {
+    val result = arrayListOf<CommentItem>()
+    var headerDate = ""
+
+    comments.forEach { comment ->
+        if (headerDate != comment.registrationDate) {
+            result.add(
+                CommentItem.CommentHeader(
+                    registrationDate = comment.registrationDate
+                )
+            )
+            headerDate = comment.registrationDate
+        }
+        result.add(CommentItem.CommentCard(comment = comment))
+    }
+    return result
+}
+
+@Composable
+fun CountLabel(
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        color = Color.LightGray,
+        shape = RoundedCornerShape(2.dp),
+        content = {
+            Text(
+                modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
+                text = count.toString(),
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp
+            )
+        },
+        contentColor = Color.Black
+    )
 }
 
 @Composable
@@ -192,6 +261,24 @@ fun KindLabel(
     )
 }
 
+@Composable
+private fun CommentHeader(
+    date: CommentItem.CommentHeader,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = Modifier.padding(
+            horizontal = 10.dp,
+            vertical = 10.dp
+        ),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        Text(
+            text = date.registrationDate
+        )
+    }
+}
+
 @Preview(showBackground = true, backgroundColor = 0x8C8C8C00)
 @Composable
 fun PreviewKindLabel() {
@@ -209,7 +296,7 @@ fun PreviewCommentColumns() {
         Surface(modifier = Modifier.fillMaxSize()) {
             CommentColumn(
                 modifier = Modifier.fillMaxSize(),
-                comments = mockData
+                commentItems = addCommentsHeader(mockData)
             )
         }
     }

@@ -1,5 +1,15 @@
 package com.psw9999.composesample
 
+sealed class CommentItem {
+    data class CommentHeader(
+        val registrationDate: String
+    ) : CommentItem()
+
+    data class CommentCard(
+        val comment: Comment
+    ) : CommentItem()
+}
+
 data class Comment(
     val commentIndex: Long,
     val ipoIndex: Long,
