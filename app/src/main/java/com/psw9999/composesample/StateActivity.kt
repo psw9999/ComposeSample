@@ -7,6 +7,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -73,31 +76,31 @@ fun WaterCounter(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-fun WellnessTaskItem(
-    taskName: String,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 16.dp),
-            text = taskName
-        )
-        IconButton(
-            onClick = onClose
-        ) {
-            Icon(
-                Icons.Filled.Close, contentDescription = "Close"
-            )
-        }
-    }
-}
+//@Composable
+//fun WellnessTaskItem(
+//    taskName: String,
+//    onClose: () -> Unit = { },
+//    modifier: Modifier = Modifier
+//) {
+//    Row(
+//        modifier = modifier,
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Text(
+//            modifier = Modifier
+//                .weight(1f)
+//                .padding(start = 16.dp),
+//            text = taskName
+//        )
+//        IconButton(
+//            onClick = onClose
+//        ) {
+//            Icon(
+//                Icons.Filled.Close, contentDescription = "Close"
+//            )
+//        }
+//    }
+//}
 
 @Composable
 fun StatelessCounter(
@@ -137,15 +140,90 @@ fun WellnessScreen(modifier: Modifier = Modifier) {
     WaterCounter()
 }
 
+@Composable
+fun WellnessTaskItem(
+    taskName: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 16.dp),
+            text = taskName
+        )
+        Checkbox(
+            checked = checked,
+            onCheckedChange = onCheckedChange
+        )
+        IconButton(onClick = onClose) {
+            Icon(Icons.Filled.Close, contentDescription = "Close")
+        }
+    }
+}
+
+@Composable
+fun WellnessTaskItem(taskName: String, modifier: Modifier = Modifier, onClose: () -> Unit) {
+    var checkedState by rememberSaveable { mutableStateOf(false) }
+
+    WellnessTaskItem(
+        taskName = taskName,
+        checked = checkedState,
+        onCheckedChange = { checkedState = !checkedState },
+        onClose = onClose,
+        modifier = modifier
+    )
+
+}
+
+data class WellnessTask(val id: Int, val label: String)
+
+private fun getWellnessTasks() = List(30) { i -> WellnessTask(i, "Task # $i") }
+
+@Composable
+fun WellnessTasksList(
+    modifier: Modifier = Modifier,
+    list: List<WellnessTask> = remember { getWellnessTasks() },
+    onCloseTask: (WellnessTask) -> Unit
+) {
+    val listState = rememberLazyListState()
+
+    LazyColumn(
+        state = listState,
+        modifier = modifier
+    ) {
+        items(
+            items = list,
+            key = { task -> task.id }
+        ) { task ->
+            WellnessTaskItem(taskName = task.label) {
+                onCloseTask(task)
+            }
+        }
+    }
+}
+
 @Preview
 @Composable
 fun PreviewWaterCounter() {
     ComposeSampleTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+        Column(
+            modifier = Modifier.fillMaxSize()
         ) {
             StatefulCounter()
+
+            val list = remember { getWellnessTasks().toMutableStateList() }
+            WellnessTasksList(
+                list = list,
+                onCloseTask = { task -> list.remove(task) }
+            )
         }
     }
 }
