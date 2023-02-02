@@ -3,10 +3,7 @@ package com.psw9999.composesample
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -19,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.psw9999.composesample.ui.theme.ComposeSampleTheme
 
 class StateActivity : ComponentActivity() {
@@ -136,8 +134,32 @@ fun StatefulCounter(
 }
 
 @Composable
-fun WellnessScreen(modifier: Modifier = Modifier) {
-    WaterCounter()
+fun WellnessScreen(
+    modifier: Modifier = Modifier,
+    stateViewModel: StateViewModel = viewModel()
+) {
+    val responseState by stateViewModel.responseState.collectAsState()
+    val list = remember { getWellnessTasks().toMutableStateList() }
+    when(responseState) {
+        is ResponseState.Init, ResponseState.Loading, ResponseState.Error -> LoadingScreen(modifier)
+        is ResponseState.Success -> WellnessTasksList(
+            list = list,
+            onCloseTask = { task -> list.remove(task) }
+        )
+    }
+}
+
+@Composable
+fun LoadingScreen(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator()
+    }
 }
 
 @Composable
