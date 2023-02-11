@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.sharp.SubdirectoryArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -25,9 +26,19 @@ import androidx.compose.ui.unit.sp
 import com.psw9999.composesample.ui.theme.ComposeSampleTheme
 
 class CommentActivity : ComponentActivity() {
+    @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            Scaffold(
+                topBar = { CommentTopAppBar() },
+                modifier = Modifier.fillMaxSize()
+            ) { paddingValues ->
+                CommentColumn(
+                    commentItems = addCommentsHeader(mockData),
+                    modifier = Modifier.padding(paddingValues)
+                )
+            }
         }
     }
 }
@@ -64,14 +75,17 @@ private fun CommentColumn(
 ) {
     LazyColumn(modifier = modifier.padding(vertical = 4.dp)) {
         items(items = commentItems) { commentItem ->
-            when(commentItem) {
+            when (commentItem) {
                 is CommentItem.CommentHeader -> {
                     CommentHeader(
                         commentItem
                     )
                 }
                 is CommentItem.CommentCard -> {
-                    CommentCard(comment = commentItem.comment)
+                    CommentCard(
+                        comment = commentItem.comment,
+                        modifier = modifier
+                    )
                 }
             }
         }
@@ -81,6 +95,7 @@ private fun CommentColumn(
 @Composable
 private fun CommentCard(
     comment: Comment,
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp),
@@ -92,7 +107,9 @@ private fun CommentCard(
         ),
         shape = RoundedCornerShape(10.dp)
     ) {
-        CommentContent(comment)
+        CommentContent(
+            comment = comment
+        )
     }
 }
 
@@ -158,13 +175,14 @@ private fun CommentContent(
             }
         }
         Column(
-            modifier = modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = modifier
+                .fillMaxHeight()
         ) {
             IconButton(
                 onClick = { isFollowing = !isFollowing },
-                modifier = modifier
+                modifier = Modifier
                     .size(24.dp)
+                    .align(Alignment.End)
             ) {
                 Icon(
                     modifier = modifier.fillMaxSize(1.0F),
@@ -177,15 +195,21 @@ private fun CommentContent(
                     },
                 )
             }
-            Spacer(modifier = modifier.size(24.dp))
-            Row {
+            Spacer(
+                modifier = Modifier.height(24.dp)
+            )
+            Row(
+                modifier = modifier
+            ) {
                 CountLabel(
                     count = comment.commentList.size,
-                    modifier = modifier
+                    modifier = Modifier
+                        .padding(end = 4.dp)
+                        .align(alignment = Alignment.CenterVertically)
                 )
                 IconButton(
                     onClick = { expanded = !expanded },
-                    modifier = modifier
+                    modifier = Modifier
                         .size(24.dp)
                 ) {
                     Icon(
@@ -235,7 +259,7 @@ fun CountLabel(
                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp),
                 text = count.toString(),
                 fontWeight = FontWeight.Bold,
-                fontSize = 13.sp
+                fontSize = 12.sp
             )
         },
         contentColor = Color.Black
@@ -267,7 +291,7 @@ private fun CommentHeader(
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = Modifier.padding(
+        modifier = modifier.padding(
             horizontal = 10.dp,
             vertical = 10.dp
         ),

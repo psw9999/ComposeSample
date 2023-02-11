@@ -14,15 +14,9 @@
         tools:targetApi="31">
         <activity
             android:name=".StateActivity"
-            android:exported="true"
+            android:exported="false"
             android:label="@string/title_activity_state"
             android:theme="@style/Theme.ComposeSample">
-
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
             <meta-data
                 android:name="android.app.lib_name"
@@ -38,6 +32,23 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
+        <activity
+            android:name=".CommentActivity"
+            android:exported="true"
+            android:label="@string/title_activity_state"
+            android:theme="@style/Theme.ComposeSample">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+
     </application>
 
 </manifest>
